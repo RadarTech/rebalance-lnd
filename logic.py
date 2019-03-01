@@ -1,4 +1,6 @@
 import sys
+
+from lnd_grpc.lnd_grpc import Client
 from routes import Routes
 
 HIGH_FEES_THRESHOLD_MSAT = 3000000
@@ -9,8 +11,8 @@ def debug(message):
 
 
 class Logic:
-    def __init__(self, lnd, first_hop_channel_id, last_hop_channel, amount, channel_ratio):
-        self.lnd = lnd
+    def __init__(self, rpc, first_hop_channel_id, last_hop_channel, amount, channel_ratio):
+        self.rpc: Client = rpc
         self.first_hop_channel_id = first_hop_channel_id
         self.last_hop_channel = last_hop_channel
         self.amount = amount
@@ -25,7 +27,7 @@ class Logic:
             debug("Forced first channel has ID %d" % self.first_hop_channel_id)
 
         payment_request = self.generate_invoice()
-        routes = Routes(self.lnd, payment_request, self.first_hop_channel_id, self.last_hop_channel)
+        routes = Routes(self.rpc, payment_request, self.first_hop_channel_id, self.last_hop_channel)
 
         if not routes.has_next():
             debug("Could not find any suitable route")
@@ -41,7 +43,7 @@ class Logic:
             debug("Trying route #%d" % len(tried_routes))
             debug(Routes.print_route(route))
 
-            response = self.lnd.send_payment(payment_request, [route])
+            response = self.rpc.send_payment_sync(payment_request, [route])
             is_successful = response.payment_error == ""
 
             if is_successful:
@@ -91,9 +93,10 @@ class Logic:
 
     def generate_invoice(self):
         memo = "Rebalance of channel with ID %d" % self.last_hop_channel.chan_id
-        return self.lnd.generate_invoice(memo, self.amount)
+        response = self.rpc.add_invoice(memo=memo, value=self.amount)
+        return self.rpc.decode_pay_req(response.payment_request)
 
     def get_channel_for_channel_id(self, channel_id):
-        for channel in self.lnd.get_channels():
+        for channel in self.rpc.list_channels():
             if channel.chan_id == channel_id:
                 return channel
