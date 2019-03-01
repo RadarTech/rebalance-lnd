@@ -1,5 +1,6 @@
 import sys
-import rpc_pb2 as ln
+
+from lnd_grpc.protos.rpc_pb2 import Hop
 
 
 def debug(message):
@@ -45,7 +46,7 @@ class RouteExtension:
         route.total_time_lock = total_time_lock
 
     def create_new_hop(self, amount_msat, channel, expiry):
-        new_hop = ln.Hop(
+        new_hop = Hop(
             chan_capacity=channel.capacity,
             fee_msat=0,
             fee=0,
