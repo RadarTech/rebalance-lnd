@@ -17,6 +17,7 @@ class Logic:
         self.last_hop_channel = last_hop_channel
         self.amount = amount
         self.channel_ratio = channel_ratio
+        self.channels = self.rpc.list_channels()
 
     def rebalance(self):
         debug(("Sending {:,} satoshis to rebalance to channel with ID %d"
@@ -97,6 +98,6 @@ class Logic:
         return self.rpc.decode_pay_req(response.payment_request)
 
     def get_channel_for_channel_id(self, channel_id):
-        for channel in self.rpc.list_channels():
+        for channel in self.channels:
             if channel.chan_id == channel_id:
                 return channel
