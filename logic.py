@@ -44,7 +44,7 @@ class Logic:
             debug("Trying route #%d" % len(tried_routes))
             debug(Routes.print_route(route))
 
-            response = self.rpc.send_payment_sync(payment_request, [route])
+            response = self.rpc.send_to_route_sync(routes=[route], payment_hash_string=payment_request.payment_hash)
             is_successful = response.payment_error == ""
 
             if is_successful:
