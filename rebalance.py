@@ -21,7 +21,7 @@ class Rebalance(object):
             grpc_host=arguments.host,
             grpc_port=arguments.port,
             macaroon_path=arguments.macaroon,
-            tls_cert_path=arguments.tls
+            lnd_dir=arguments.lnddir
         )
 
         first_hop_channel_id = vars(arguments)['from']
@@ -103,7 +103,7 @@ class Rebalance(object):
         )
 
         parser.add_argument(
-            '--tls',
+            '--lnddir',
             type=str
         )
 
