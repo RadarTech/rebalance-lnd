@@ -10,12 +10,14 @@ from logic import Logic
 
 MAX_CHANNEL_CAPACITY = 16777215
 MAX_SATOSHIS_PER_TRANSACTION = 4294967
-
+BTC_TO_LTC_CONVERSION_RATE = 60
 
 class Rebalance(object):
     def __init__(self):
         argument_parser = self.get_argument_parser()
         arguments = argument_parser.parse_args()
+
+        self.chain = arguments.chain
 
         self.rpc = lnd_grpc.Client(
             grpc_host=arguments.host,
@@ -121,6 +123,13 @@ class Rebalance(object):
             default='127.0.0.1'
         )
 
+        parser.add_argument(
+            '--chain',
+            type=str,
+            help='bitcoin or litecoin',
+            default='bitcoin'
+        )
+
         parser.add_argument("-r", "--ratio", action="store", type=int,
                             dest="ratio", default=50,
                             help="ratio for channel imbalance between 1 and 50%%, eg. 45 for 45%%")
@@ -224,6 +233,10 @@ class Rebalance(object):
         columns = self.get_columns()
         columns_scaled_to_capacity = int(
             round(columns * float(candidate.capacity) / MAX_CHANNEL_CAPACITY))
+
+        # correct bars for Litecoin
+        if (self.chain == "litecoin"):
+            columns_scaled_to_capacity = int(round(columns_scaled_to_capacity / BTC_TO_LTC_CONVERSION_RATE))
 
         bar_width = columns_scaled_to_capacity - 2
         result = "|"
